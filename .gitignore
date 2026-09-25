@@ -48,7 +48,5 @@ app.*.map.json
 .widget_preview/
 
 # Screenshots and temp files
-screenshots/
-**/screenshots/
 ~$*
 *.tmp
