@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/favorit_model.dart';
 import '../navigation/app_routes.dart';
 
 class HalamanLayanan extends StatefulWidget {
@@ -162,12 +164,18 @@ class _HalamanLayananState extends State<HalamanLayanan> {
     List<Map<String, String>> list,
     IconData leadingIcon,
   ) {
+    // Memantau status FavoritModel dengan context.watch agar warna ikon bereaksi otomatis
+    final favoritModel = context.watch<FavoritModel>();
+
     return ListView.separated(
       padding: const EdgeInsets.all(12.0),
       itemCount: list.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final item = list[index];
+        final String namaLayanan = item['nama']!;
+        final bool isFavorit = favoritModel.isFavorit(namaLayanan);
+
         return Card(
           elevation: 0.8,
           margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -178,7 +186,7 @@ class _HalamanLayananState extends State<HalamanLayanan> {
               child: Icon(leadingIcon, color: Colors.teal.shade700),
             ),
             title: Text(
-              item['nama']!,
+              namaLayanan,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             subtitle: Column(
@@ -195,7 +203,28 @@ class _HalamanLayananState extends State<HalamanLayanan> {
                 ),
               ],
             ),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: isFavorit ? 'Batal tandai favorit' : 'Tandai favorit',
+                  icon: Icon(
+                    isFavorit ? Icons.star_rounded : Icons.star_border_rounded,
+                    color: isFavorit ? Colors.amber.shade700 : Colors.grey.shade400,
+                    size: 26,
+                  ),
+                  onPressed: () {
+                    // Mengubah state melalui context.read agar efisien dan sesuai kaidah Provider
+                    if (isFavorit) {
+                      context.read<FavoritModel>().batalTandai(namaLayanan);
+                    } else {
+                      context.read<FavoritModel>().tandai(namaLayanan);
+                    }
+                  },
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black26),
+              ],
+            ),
             onTap: () => _bukaRincian(item),
           ),
         );

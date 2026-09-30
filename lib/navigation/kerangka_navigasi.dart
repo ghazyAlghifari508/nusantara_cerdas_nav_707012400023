@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../models/pengajuan_model.dart';
 import '../pages/halaman_beranda.dart';
 import '../pages/halaman_layanan.dart';
 import '../pages/halaman_warga.dart';
@@ -115,9 +117,10 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           selectedIcon: Icon(Icons.grid_view, color: Colors.teal),
           label: 'Layanan',
         ),
+        // Destination Warga dengan BadgeIkonWarga terisolasi menggunakan context.select
         NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person, color: Colors.teal),
+          icon: BadgeIkonWarga(isSelected: false),
+          selectedIcon: BadgeIkonWarga(isSelected: true),
           label: 'Warga',
         ),
       ],
@@ -157,9 +160,10 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
               selectedIcon: Icon(Icons.grid_view, color: Colors.teal),
               label: Text('Katalog Layanan'),
             ),
+            // Destination Warga dengan Badge reaktif
             NavigationRailDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: Colors.teal),
+              icon: BadgeIkonWarga(isSelected: false),
+              selectedIcon: BadgeIkonWarga(isSelected: true),
               label: Text('Profil Warga'),
             ),
           ],
@@ -217,8 +221,8 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           label: Text('Layanan Publik'),
         ),
         const NavigationDrawerDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person, color: Colors.teal),
+          icon: BadgeIkonWarga(isSelected: false),
+          selectedIcon: BadgeIkonWarga(isSelected: true),
           label: Text('Profil & Laporan Warga'),
         ),
         const Divider(indent: 28, endIndent: 28),
@@ -238,7 +242,7 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           leading: const Icon(Icons.location_city_outlined),
           title: const Text('Pengaturan Kota'),
           onTap: () {
-            Navigator.pop(context); // Tutup drawer dahulu sebelum pushNamed
+            Navigator.pop(context);
             Navigator.pushNamed(context, AppRoutes.pengaturanKota);
           },
         ),
@@ -247,7 +251,7 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           leading: const Icon(Icons.info_outline),
           title: const Text('Tentang Aplikasi'),
           onTap: () {
-            Navigator.pop(context); // Tutup drawer dahulu sebelum pushNamed
+            Navigator.pop(context);
             Navigator.pushNamed(context, AppRoutes.tentangAplikasi);
           },
         ),
@@ -256,11 +260,40 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           leading: const Icon(Icons.logout_rounded, color: Colors.red),
           title: const Text('Keluar', style: TextStyle(color: Colors.red)),
           onTap: () {
-            Navigator.pop(context); // Tutup drawer dahulu
+            Navigator.pop(context);
             _tampilkanDialogKeluar();
           },
         ),
       ],
+    );
+  }
+}
+
+/// Widget khusus Badge Ikon Warga
+/// Memanfaatkan `context.select<PengajuanModel, int>` agar pembaruan total pengajuan
+/// HANYA me-rebuild widget badge kecil ini, tanpa me-rebuild NavigationBar atau NavigationRail.
+class BadgeIkonWarga extends StatelessWidget {
+  final bool isSelected;
+  const BadgeIkonWarga({super.key, this.isSelected = false});
+
+  @override
+  Widget build(BuildContext context) {
+    // Membaca hanya totalPengajuan dari PengajuanModel
+    final totalPengajuan = context.select<PengajuanModel, int>(
+      (model) => model.totalPengajuan,
+    );
+
+    return Badge(
+      isLabelVisible: totalPengajuan > 0,
+      label: Text(
+        '$totalPengajuan',
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+      ),
+      backgroundColor: Colors.deepOrange,
+      child: Icon(
+        isSelected ? Icons.person : Icons.person_outline,
+        color: isSelected ? Colors.teal : null,
+      ),
     );
   }
 }

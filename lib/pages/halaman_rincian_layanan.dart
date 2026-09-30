@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/pengajuan_model.dart';
 
-class HalamanRincianLayanan extends StatelessWidget {
+/// Halaman Rincian Layanan Publik Nusantara Cerdas
+/// Menerapkan pengelolaan State Lokal melalui setState() untuk status tombol sedang mengirim,
+/// serta memperbarui State Aplikasi PengajuanModel melalui Provider sebelum kembali.
+class HalamanRincianLayanan extends StatefulWidget {
   final String namaLayanan;
   final String dinas;
   final String jamOperasional;
@@ -13,6 +18,46 @@ class HalamanRincianLayanan extends StatelessWidget {
     required this.jamOperasional,
     required this.keterangan,
   });
+
+  @override
+  State<HalamanRincianLayanan> createState() => _HalamanRincianLayananState();
+}
+
+class _HalamanRincianLayananState extends State<HalamanRincianLayanan> {
+  // State lokal untuk menandai proses pengiriman formulir permohonan
+  bool _sedangMengirim = false;
+
+  Future<void> _prosesPengajuan() async {
+    if (_sedangMengirim) return;
+
+    // 1. Memperbarui state lokal agar UI menampilkan indikator loading
+    setState(() {
+      _sedangMengirim = true;
+    });
+
+    // Simulasi jeda transmisi jaringan ke server dinas terkait
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    // Proteksi build context mounted sebelum melanjutkan manipulasi state / navigasi
+    if (!mounted) return;
+
+    // 2. Memasukkan berkas permohonan ke dalam state aplikasi PengajuanModel
+    context.read<PengajuanModel>().tambahPengajuan(
+          namaLayanan: widget.namaLayanan,
+          dinas: widget.dinas,
+        );
+
+    // 3. Mengembalikan state lokal ke kondisi semula
+    setState(() {
+      _sedangMengirim = false;
+    });
+
+    // 4. Menutup halaman rincian sekaligus mengirimkan nilai balik konfirmasi ke halaman pemanggil (Modul II)
+    Navigator.pop(
+      context,
+      'Permohonan "${widget.namaLayanan}" berhasil diajukan ke ${widget.dinas}.',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +98,7 @@ class HalamanRincianLayanan extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                namaLayanan,
+                                widget.namaLayanan,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -61,7 +106,7 @@ class HalamanRincianLayanan extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                dinas,
+                                widget.dinas,
                                 style: TextStyle(
                                   color: Colors.teal.shade800,
                                   fontWeight: FontWeight.w600,
@@ -77,13 +122,13 @@ class HalamanRincianLayanan extends StatelessWidget {
                     _buildInfoRow(
                       Icons.access_time_filled_outlined,
                       'Jam Operasional',
-                      jamOperasional,
+                      widget.jamOperasional,
                     ),
                     const SizedBox(height: 12),
                     _buildInfoRow(
                       Icons.info_outline,
                       'Deskripsi Layanan',
-                      keterangan,
+                      widget.keterangan,
                     ),
                     const SizedBox(height: 12),
                     _buildInfoRow(
@@ -96,29 +141,51 @@ class HalamanRincianLayanan extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Tombol Ajukan Permohonan dengan indikator proses pengiriman (State Lokal setState)
             SizedBox(
               width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Menutup halaman sekaligus mengembalikan pesan pengajuan
-                  Navigator.pop(
-                    context,
-                    'Permohonan "$namaLayanan" berhasil diajukan ke $dinas.',
-                  );
-                },
-                icon: const Icon(Icons.send_rounded),
-                label: const Text(
-                  'Ajukan Permohonan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _sedangMengirim ? null : _prosesPengajuan,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal.shade700,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.teal.shade300,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                child: _sedangMengirim
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Memproses Pengajuan...',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ],
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.send_rounded, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Ajukan Permohonan',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
               ),
             ),
             const SizedBox(height: 12),
@@ -126,7 +193,7 @@ class HalamanRincianLayanan extends StatelessWidget {
               width: double.infinity,
               height: 48,
               child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _sedangMengirim ? null : () => Navigator.pop(context),
                 child: const Text('Kembali ke Daftar Layanan'),
               ),
             ),
