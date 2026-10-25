@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/pengajuan_cubit.dart';
+import '../cubit/theme_cubit.dart';
 import '../pages/halaman_beranda.dart';
 import '../pages/halaman_layanan.dart';
 import '../pages/halaman_warga.dart';
@@ -72,6 +73,8 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
     // Membaca lebar layar untuk menentukan tata letak adaptif (ambang 600 px)
     final double lebarLayar = MediaQuery.of(context).size.width;
     final bool layarLebar = lebarLayar >= 600;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return PopScope(
       canPop: _indeksTerpilih == 0,
@@ -88,20 +91,33 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
         appBar: AppBar(
           title: Text(_judul[_indeksTerpilih]),
           centerTitle: true,
-          backgroundColor: Colors.teal.shade700,
-          foregroundColor: Colors.white,
           elevation: 2,
+          actions: [
+            BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, themeMode) {
+                final isDarkMode = themeMode == ThemeMode.dark;
+                return IconButton(
+                  icon: Icon(
+                    isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                  ),
+                  tooltip: isDarkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap',
+                  onPressed: () => context.read<ThemeCubit>().toggle(),
+                );
+              },
+            ),
+          ],
         ),
-        drawer: _buatDrawer(),
+        drawer: _buatDrawer(isDark),
         // Tata letak adaptif: NavigationRail untuk layar lebar, NavigationBar untuk layar sempit
-        body: layarLebar ? _tataLetakLebar() : _halaman[_indeksTerpilih],
-        bottomNavigationBar: layarLebar ? null : _buatBilahBawah(),
+        body: layarLebar ? _tataLetakLebar(isDark) : _halaman[_indeksTerpilih],
+        bottomNavigationBar: layarLebar ? null : _buatBilahBawah(isDark),
       ),
     );
   }
 
   // Helper widget untuk ikon badge profil warga
-  Widget _buildWargaIconWithBadge({required bool isSelected}) {
+  Widget _buildWargaIconWithBadge({required bool isSelected, required bool isDark}) {
+    final theme = Theme.of(context);
     return BlocSelector<PengajuanCubit, PengajuanState, int>(
       selector: (state) => state.totalPengajuan,
       builder: (context, total) {
@@ -111,7 +127,7 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
           backgroundColor: Colors.red.shade700,
           child: Icon(
             isSelected ? Icons.person : Icons.person_outline,
-            color: isSelected ? Colors.teal : null,
+            color: isSelected ? theme.colorScheme.primary : null,
           ),
         );
       },
@@ -119,25 +135,25 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
   }
 
   // NavigationBar Material 3 untuk layar sempit (< 600 px)
-  Widget _buatBilahBawah() {
+  Widget _buatBilahBawah(bool isDark) {
+    final theme = Theme.of(context);
     return NavigationBar(
       selectedIndex: _indeksTerpilih,
       onDestinationSelected: _pilihTujuan,
-      indicatorColor: Colors.teal.shade100,
       destinations: [
-        const NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home, color: Colors.teal),
+        NavigationDestination(
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: theme.colorScheme.primary),
           label: 'Beranda',
         ),
-        const NavigationDestination(
-          icon: Icon(Icons.grid_view_outlined),
-          selectedIcon: Icon(Icons.grid_view, color: Colors.teal),
+        NavigationDestination(
+          icon: const Icon(Icons.grid_view_outlined),
+          selectedIcon: Icon(Icons.grid_view, color: theme.colorScheme.primary),
           label: 'Layanan',
         ),
         NavigationDestination(
-          icon: _buildWargaIconWithBadge(isSelected: false),
-          selectedIcon: _buildWargaIconWithBadge(isSelected: true),
+          icon: _buildWargaIconWithBadge(isSelected: false, isDark: isDark),
+          selectedIcon: _buildWargaIconWithBadge(isSelected: true, isDark: isDark),
           label: 'Warga',
         ),
       ],
@@ -145,41 +161,40 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
   }
 
   // Tata letak layar lebar (>= 600 px), NavigationRail di kiri + isi di kanan
-  Widget _tataLetakLebar() {
+  Widget _tataLetakLebar(bool isDark) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         NavigationRail(
           selectedIndex: _indeksTerpilih,
           onDestinationSelected: _pilihTujuan,
           extended: true,
-          backgroundColor: Colors.teal.shade50.withValues(alpha: 0.5),
-          indicatorColor: Colors.teal.shade200,
           leading: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20.0),
             child: CircleAvatar(
-              backgroundColor: Colors.teal.shade700,
+              backgroundColor: theme.colorScheme.primary,
               radius: 24,
-              child: const Icon(
+              child: Icon(
                 Icons.location_city_rounded,
-                color: Colors.white,
+                color: theme.colorScheme.onPrimary,
                 size: 26,
               ),
             ),
           ),
           destinations: [
-            const NavigationRailDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: Colors.teal),
-              label: Text('Beranda Smart City'),
-            ),
-            const NavigationRailDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view, color: Colors.teal),
-              label: Text('Katalog Layanan'),
+            NavigationRailDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home, color: theme.colorScheme.primary),
+              label: const Text('Beranda Smart City'),
             ),
             NavigationRailDestination(
-              icon: _buildWargaIconWithBadge(isSelected: false),
-              selectedIcon: _buildWargaIconWithBadge(isSelected: true),
+              icon: const Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view, color: theme.colorScheme.primary),
+              label: const Text('Katalog Layanan'),
+            ),
+            NavigationRailDestination(
+              icon: _buildWargaIconWithBadge(isSelected: false, isDark: isDark),
+              selectedIcon: _buildWargaIconWithBadge(isSelected: true, isDark: isDark),
               label: const Text('Profil Warga'),
             ),
           ],
@@ -191,7 +206,8 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
   }
 
   // NavigationDrawer untuk panel samping
-  Widget _buatDrawer() {
+  Widget _buatDrawer(bool isDark) {
+    final theme = Theme.of(context);
     return NavigationDrawer(
       selectedIndex: _indeksTerpilih,
       onDestinationSelected: (indeks) {
@@ -202,7 +218,9 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
         UserAccountsDrawerHeader(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.teal.shade700, Colors.teal.shade900],
+              colors: isDark
+                  ? [const Color(0xFF1E3835), const Color(0xFF122220)]
+                  : [Colors.teal.shade700, Colors.teal.shade900],
             ),
           ),
           accountName: const Text(
@@ -210,46 +228,50 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           accountEmail: const Text('NIM: 707012400023 | D4SIKC 48-03'),
-          currentAccountPicture: const CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 40, color: Colors.teal),
+          currentAccountPicture: CircleAvatar(
+            backgroundColor: isDark ? const Color(0xFF162523) : Colors.white,
+            child: Icon(
+              Icons.person,
+              size: 40,
+              color: isDark ? const Color(0xFF80CBC4) : Colors.teal,
+            ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 12, 16, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(28, 12, 16, 8),
           child: Text(
             'Layanan Utama',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.black54,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home, color: Colors.teal),
-          label: Text('Beranda'),
-        ),
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.grid_view_outlined),
-          selectedIcon: Icon(Icons.grid_view, color: Colors.teal),
-          label: Text('Layanan Publik'),
+        NavigationDrawerDestination(
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: theme.colorScheme.primary),
+          label: const Text('Beranda'),
         ),
         NavigationDrawerDestination(
-          icon: _buildWargaIconWithBadge(isSelected: false),
-          selectedIcon: _buildWargaIconWithBadge(isSelected: true),
+          icon: const Icon(Icons.grid_view_outlined),
+          selectedIcon: Icon(Icons.grid_view, color: theme.colorScheme.primary),
+          label: const Text('Layanan Publik'),
+        ),
+        NavigationDrawerDestination(
+          icon: _buildWargaIconWithBadge(isSelected: false, isDark: isDark),
+          selectedIcon: _buildWargaIconWithBadge(isSelected: true, isDark: isDark),
           label: const Text('Profil & Laporan Warga'),
         ),
         const Divider(indent: 28, endIndent: 28),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 8, 16, 4),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(28, 8, 16, 4),
           child: Text(
             'Menu Pendukung',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.black54,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),

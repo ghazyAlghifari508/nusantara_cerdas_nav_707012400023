@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nusantara_cerdas_nav_707012400023/cubit/favorit_cubit.dart';
 import 'package:nusantara_cerdas_nav_707012400023/cubit/pengajuan_cubit.dart';
+import 'package:nusantara_cerdas_nav_707012400023/cubit/theme_cubit.dart';
 import 'package:nusantara_cerdas_nav_707012400023/main.dart';
 
 void main() {
@@ -38,7 +39,24 @@ void main() {
     expect(cubit.state.totalPengajuan, 0);
   });
 
-  testWidgets('Pengujian alur navigasi & state management Nusantara Cerdas Mobile', (
+  test('ThemeCubit unit test - toggle and setDarkMode', () {
+    final cubit = ThemeCubit();
+    expect(cubit.state, ThemeMode.light);
+
+    cubit.toggle();
+    expect(cubit.state, ThemeMode.dark);
+
+    cubit.toggle();
+    expect(cubit.state, ThemeMode.light);
+
+    cubit.setDarkMode(true);
+    expect(cubit.state, ThemeMode.dark);
+
+    cubit.setDarkMode(false);
+    expect(cubit.state, ThemeMode.light);
+  });
+
+  testWidgets('Pengujian alur navigasi, state favorit, pengajuan, dan tema Nusantara Cerdas Mobile', (
     WidgetTester tester,
   ) async {
     // Ukuran layar mobile (< 600 px)
@@ -52,6 +70,7 @@ void main() {
         providers: [
           BlocProvider<FavoritCubit>(create: (_) => FavoritCubit()),
           BlocProvider<PengajuanCubit>(create: (_) => PengajuanCubit()),
+          BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
         ],
         child: const AplikasiNusantaraCerdas(),
       ),
@@ -81,5 +100,17 @@ void main() {
     expect(find.text('Profil & Laporan Warga'), findsOneWidget);
     expect(find.text('Ghazy Nabil Alghfari'), findsOneWidget);
     expect(find.text('1 Tersimpan'), findsOneWidget);
+
+    // Verifikasi Switch Dark Mode ada di Halaman Warga
+    expect(find.text('Mode Tampilan Gelap (Dark Mode)'), findsOneWidget);
+    final switchFinder = find.byType(Switch);
+    expect(switchFinder, findsOneWidget);
+
+    // Aktifkan Switch Dark Mode
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    // Verifikasi subtitle berubah sesuai mode gelap
+    expect(find.text('Mode malam aktif: palet warna gelap hemat daya'), findsOneWidget);
   });
 }

@@ -5,6 +5,9 @@ class HalamanBeranda extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final List<Map<String, dynamic>> pilarSmartCity = const [
       {
         'judul': 'Smart Governance',
@@ -52,14 +55,18 @@ class HalamanBeranda extends StatelessWidget {
           padding: const EdgeInsets.all(18.0),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.teal.shade700, Colors.teal.shade900],
+              colors: isDark
+                  ? [const Color(0xFF1E3835), const Color(0xFF122220)]
+                  : [Colors.teal.shade700, Colors.teal.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.teal.shade900.withValues(alpha: 0.2),
+                color: isDark
+                    ? Colors.black26
+                    : Colors.teal.shade900.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -127,7 +134,7 @@ class HalamanBeranda extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.teal.shade50,
+                color: isDark ? Colors.teal.shade900 : Colors.teal.shade50,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -135,7 +142,7 @@ class HalamanBeranda extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: Colors.teal.shade800,
+                  color: isDark ? Colors.teal.shade200 : Colors.teal.shade800,
                 ),
               ),
             ),
@@ -162,7 +169,9 @@ class HalamanBeranda extends StatelessWidget {
               elevation: 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.grey.shade200),
+                side: BorderSide(
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -172,10 +181,10 @@ class HalamanBeranda extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 18,
-                      backgroundColor: color.withValues(alpha: 0.15),
+                      backgroundColor: color.withValues(alpha: isDark ? 0.25 : 0.15),
                       child: Icon(
                         pilar['ikon'] as IconData,
-                        color: color,
+                        color: isDark ? color.withValues(alpha: 0.9) : color,
                         size: 20,
                       ),
                     ),
@@ -192,7 +201,10 @@ class HalamanBeranda extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       pilar['subjudul'] as String,
-                      style: const TextStyle(fontSize: 11, color: Colors.black54),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),

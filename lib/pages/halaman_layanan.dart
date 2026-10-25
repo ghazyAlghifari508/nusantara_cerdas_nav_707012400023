@@ -119,16 +119,20 @@ class _HalamanLayananState extends State<HalamanLayanan> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return DefaultTabController(
       length: 3,
       child: Column(
         children: [
           Container(
-            color: Theme.of(context).colorScheme.surface,
-            child: const TabBar(
-              labelColor: Colors.teal,
-              indicatorColor: Colors.teal,
-              tabs: [
+            color: theme.colorScheme.surface,
+            child: TabBar(
+              labelColor: theme.colorScheme.primary,
+              indicatorColor: theme.colorScheme.primary,
+              unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+              tabs: const [
                 Tab(
                   icon: Icon(Icons.assignment_outlined),
                   text: 'Perizinan',
@@ -147,9 +151,9 @@ class _HalamanLayananState extends State<HalamanLayanan> {
           Expanded(
             child: TabBarView(
               children: [
-                _buildDaftarLayanan(_layananPerizinan, Icons.description_outlined),
-                _buildDaftarLayanan(_layananKesehatan, Icons.health_and_safety_outlined),
-                _buildDaftarLayanan(_layananTransportasi, Icons.commute_outlined),
+                _buildDaftarLayanan(_layananPerizinan, Icons.description_outlined, isDark),
+                _buildDaftarLayanan(_layananKesehatan, Icons.health_and_safety_outlined, isDark),
+                _buildDaftarLayanan(_layananTransportasi, Icons.commute_outlined, isDark),
               ],
             ),
           ),
@@ -161,7 +165,9 @@ class _HalamanLayananState extends State<HalamanLayanan> {
   Widget _buildDaftarLayanan(
     List<Map<String, String>> list,
     IconData leadingIcon,
+    bool isDark,
   ) {
+    final theme = Theme.of(context);
     return ListView.separated(
       padding: const EdgeInsets.all(12.0),
       itemCount: list.length,
@@ -175,8 +181,11 @@ class _HalamanLayananState extends State<HalamanLayanan> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.teal.shade50,
-              child: Icon(leadingIcon, color: Colors.teal.shade700),
+              backgroundColor: isDark ? Colors.teal.shade900 : Colors.teal.shade50,
+              child: Icon(
+                leadingIcon,
+                color: isDark ? Colors.teal.shade200 : Colors.teal.shade700,
+              ),
             ),
             title: Text(
               namaLayanan,
@@ -188,11 +197,17 @@ class _HalamanLayananState extends State<HalamanLayanan> {
                 const SizedBox(height: 2),
                 Text(
                   item['dinas']!,
-                  style: TextStyle(fontSize: 12, color: Colors.teal.shade900),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? theme.colorScheme.primary : Colors.teal.shade900,
+                  ),
                 ),
                 Text(
                   '🕒 ${item['jam']}',
-                  style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -206,7 +221,7 @@ class _HalamanLayananState extends State<HalamanLayanan> {
                       tooltip: isFav ? 'Hapus dari favorit' : 'Tandai favorit',
                       icon: Icon(
                         isFav ? Icons.star_rounded : Icons.star_outline_rounded,
-                        color: isFav ? Colors.amber.shade700 : Colors.grey.shade400,
+                        color: isFav ? Colors.amber.shade600 : Colors.grey.shade400,
                         size: 26,
                       ),
                       onPressed: () {
